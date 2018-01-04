@@ -11,26 +11,63 @@
       #messages { list-style-type: none; margin: 0; padding: 0; }
       #messages li { padding: 5px 10px; }
       #messages li:nth-child(odd) { background: #eee; }
+      .bold {
+        font-weight: bold;
+      }
+      .hidden {
+        display: none;
+      }
+      .show {
+        display: block;
+      }
     </style>
   </head>
   <body>
-    <ul id="messages"></ul>
-    <form action="">
+    <form action="" id="nameForm" class="">
+      <input id="name" autocomplete="off" /><button>Select Name</button>
+    </form>
+    <ul id="messages" class="hidden"></ul>
+    <form action="" id="form" class="hidden">
       <input id="m" autocomplete="off" /><button>Send</button>
     </form>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script>
+      function getRandomColor() {
+        var letters = '0123456789ABCDEF';
+        var color = '#';
+        for (var i = 0; i < 6; i++) {
+          color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+      }
       $(function () {
+        var user = {
+          color: getRandomColor(),
+          username: '',
+        }
         var socket = io();
-        $('form').submit(function(){
-          socket.emit('chat message', $('#m').val());
+        $('#nameForm').submit(function(){
+          user.username = $('#name').val();
+          $(this).addClass('hidden');
+          $('#messages').removeClass('hidden');
+          $('#form').removeClass('hidden');
+          return false;
+        });
+        $('#form').submit(function(){
+          var data = {
+            msg: $('#m').val(),
+            user: user,
+          }
+          socket.emit('chat message', data);
           $('#m').val('');
           return false;
         });
-        socket.on('chat message', function(msg){
-          $('#messages').append($('<li>').text(msg));
+        socket.on('chat message', function(data){
+          var { user, msg } = data;
+          $('#messages').append($('<li>').html(`<span class="bold" style=
+            "color: ${user.color}">${user.username}: </span>${msg}`));
         });
       });
     </script>

@@ -30,6 +30,7 @@
     <form action="" id="form" class="hidden">
       <input id="m" autocomplete="off" /><button>Send</button>
     </form>
+    <div id="whoTyping" class="hidden"> </div>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
@@ -53,21 +54,46 @@
           $(this).addClass('hidden');
           $('#messages').removeClass('hidden');
           $('#form').removeClass('hidden');
+          $('#whoTyping').removeClass('hidden');
           return false;
         });
         $('#form').submit(function(){
           var data = {
             msg: $('#m').val(),
+            type: 'message',
             user: user,
           }
           socket.emit('chat message', data);
           $('#m').val('');
           return false;
         });
+        $("#m").keypress(function() {
+          var value = $(this).val();
+          if (value !== '') {
+            var data = {
+              type: 'typing',
+              user: user,
+              isTyping: true,
+            }
+            socket.emit('chat message', data);
+          }
+        });
         socket.on('chat message', function(data){
-          var { user, msg } = data;
-          $('#messages').append($('<li>').html(`<span class="bold" style=
-            "color: ${user.color}">${user.username}: </span>${msg}`));
+          var { user, msg, type, isTyping } = data;
+          switch(type) {
+            case 'message':
+              $('#messages').append($('<li>').html(`<span class="bold" style=
+                "color: ${user.color}">${user.username}: </span>${msg}`));
+              break;
+            case 'typing':
+              if (isTyping) {
+                $('#whoTyping').html($('<p>').text('Someone is typing'));
+              } else {}
+              
+              break;
+            default:
+              break;
+          }
         });
       });
     </script>
